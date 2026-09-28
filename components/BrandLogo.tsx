@@ -6,7 +6,7 @@ interface BrandLogoProps {
 
 /**
  * Wordmark rendered as inline SVG so it uses the page's Poppins font and stays crisp at any size.
- * "Veralba" is white and "Solar" is brand yellow, designed for the navy header and footer.
+ * "Solar" is white and "Check" is brand yellow, designed for the navy header and footer.
  */
 export function BrandLogo({ className }: BrandLogoProps) {
   return (
@@ -26,10 +26,8 @@ export function BrandLogo({ className }: BrandLogoProps) {
         letterSpacing="-2"
         fill="#ffffff"
       >
-        Veralba
-        <tspan fill="var(--color-accent)" dx="22">
-          Solar
-        </tspan>
+        Solar
+        <tspan fill="var(--color-accent)">Check</tspan>
       </text>
     </svg>
   );
