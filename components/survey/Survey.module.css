@@ -361,7 +361,7 @@
   text-decoration: underline;
 }
 
-/* Message, verification and success screens */
+/* Message and success screens */
 .message {
   max-width: 720px;
   margin: 0 auto;
@@ -391,24 +391,6 @@
   font-weight: 700;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-}
-
-.phoneNumber {
-  display: block;
-  margin-block: 4px;
-}
-
-.codeSection {
-  margin: 20px 0 30px;
-}
-
-.codeInput {
-  width: 200px;
-  height: auto;
-  padding: 10px;
-  font-size: 20px;
-  font-weight: 400;
-  letter-spacing: 0.3em;
 }
 
 .qualifyButton {

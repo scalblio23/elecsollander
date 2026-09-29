@@ -18,10 +18,10 @@ import {
 import { submitLead } from "@/lib/lead";
 import { trackPixelEvent } from "@/lib/pixel";
 import { ChoiceQuestion } from "./ChoiceQuestion";
+import { Consent } from "./Consent";
 import { FieldQuestion } from "./FieldQuestion";
 import { RenterMessage } from "./RenterMessage";
 import { SuccessMessage } from "./SuccessMessage";
-import { VerifyStep } from "./VerifyStep";
 import styles from "./Survey.module.css";
 
 /** Delay between choosing a card and moving on, so the selection is visible. */
@@ -195,6 +195,7 @@ export function Survey() {
   };
 
   const showNextButton = definition.kind === "choice" || definition.kind === "fields";
+  const isFinalQuestion = getNextStep(step, answers) === "success";
 
   return (
     <section ref={sectionRef} id="eligibility-check" className={styles.section} aria-labelledby="page-heading">
@@ -245,15 +246,6 @@ export function Survey() {
 
             {step === "renter" && <RenterMessage />}
 
-            {step === "verify" && (
-              <VerifyStep
-                mobile={answers.mobile ?? ""}
-                code={answers.otp ?? ""}
-                error={errors.otp}
-                inputId={fieldId("otp")}
-                onChange={(value) => setAnswer("otp", value)}
-              />
-            )}
 
             {step === "success" && <SuccessMessage answers={answers} onRestart={restart} />}
           </div>
@@ -263,9 +255,9 @@ export function Survey() {
               {showNextButton && (
                 <button
                   type="submit"
-                  className={`${styles.nextButton} ${isStepValid ? "" : styles.inactive}`}
+                  className={`${isFinalQuestion ? styles.qualifyButton : styles.nextButton} ${isStepValid ? "" : styles.inactive}`}
                 >
-                  Next
+                  {isFinalQuestion ? "See If I Qualify" : "Next"}
                 </button>
               )}
               {canGoBack && (
@@ -275,6 +267,8 @@ export function Survey() {
               )}
             </div>
           )}
+
+          {isFinalQuestion && <Consent />}
         </form>
       </div>
     </section>

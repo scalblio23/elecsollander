@@ -49,6 +49,10 @@ describe("Survey", () => {
     await user().click(screen.getByRole("button", { name: "Next" }));
   }
 
+  async function qualify() {
+    await user().click(screen.getByRole("button", { name: "See If I Qualify" }));
+  }
+
   async function completeToContact(existingSolar: "Yes" | "No") {
     await user().type(screen.getByLabelText("Postcode"), "2000{Enter}");
     await choose("Own");
@@ -88,7 +92,7 @@ describe("Survey", () => {
     await user().type(input, "0{Enter}");
     expect(heading()).toHaveTextContent("Do you own your home?");
     expect(heading()).toHaveFocus();
-    expect(progressValue()).toBe(9);
+    expect(progressValue()).toBe(10);
   });
 
   it("requires a choice before Next on radio steps", async () => {
@@ -151,38 +155,28 @@ describe("Survey", () => {
     expect(screen.getByRole("radio", { name: "Rent" })).toBeChecked();
   });
 
-  it("completes the existing-solar path through demo verification", async () => {
+  it("completes the existing-solar path without verification", async () => {
     render(<Survey />);
     await completeToContact("Yes");
 
     expect(heading()).toHaveTextContent("How can we reach you?");
-    await next();
+    await qualify();
     expect(screen.getByText("Please enter your email address.")).toBeInTheDocument();
     expect(screen.getByText("Please enter your mobile number.")).toBeInTheDocument();
 
     await user().type(screen.getByLabelText("Best email address"), "alex@example");
     await user().type(screen.getByLabelText("Mobile phone number"), "0212345678");
-    await next();
+    await qualify();
     expect(screen.getByText(/valid email address/)).toBeInTheDocument();
     expect(screen.getByText(/starting with 04/)).toBeInTheDocument();
 
     await user().type(screen.getByLabelText("Best email address"), ".com");
     await user().clear(screen.getByLabelText("Mobile phone number"));
-    await user().type(screen.getByLabelText("Mobile phone number"), "0412345678{Enter}");
-
-    expect(screen.getByText(/No text message is sent/i)).toBeInTheDocument();
-    expect(heading()).toHaveTextContent("0412 345 678");
+    await user().type(screen.getByLabelText("Mobile phone number"), "0412345678");
     expect(progressValue()).toBe(92);
-
-    const code = screen.getByLabelText("6-digit verification code");
-    const qualify = screen.getByRole("button", { name: "See If I Qualify" });
-    await user().type(code, "654321");
-    await user().click(qualify);
-    expect(screen.getByText(/That code is incorrect/)).toBeInTheDocument();
-
-    await user().clear(code);
-    await user().type(code, "123456");
-    await user().click(qualify);
+    expect(screen.getByRole("link", { name: "Privacy Policy" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Next" })).not.toBeInTheDocument();
+    await qualify();
 
     expect(heading()).toHaveTextContent("Thanks, Alex! Your eligibility request is ready.");
     expect(progressValue()).toBe(100);
@@ -202,17 +196,16 @@ describe("Survey", () => {
       render(<Survey />);
       await completeToContact("No");
       await user().type(screen.getByLabelText("Best email address"), "alex@example.com");
-      await user().type(screen.getByLabelText("Mobile phone number"), "0412 345 678{Enter}");
-      expect(progressValue()).toBe(91);
+      expect(progressValue()).toBe(90);
       expect(fbq).not.toHaveBeenCalled();
       expect(fetchMock).not.toHaveBeenCalled();
-      await user().type(screen.getByLabelText("6-digit verification code"), "123456{Enter}");
+      await user().type(screen.getByLabelText("Mobile phone number"), "0412 345 678{Enter}");
 
       expect(heading()).toHaveTextContent("Your eligibility request is ready.");
       expect(screen.queryByText("Existing system age")).not.toBeInTheDocument();
       expect(screen.queryByText("Reason for enquiry")).not.toBeInTheDocument();
 
-      // The completed survey is posted to the lead route exactly once, without the OTP.
+      // The completed survey is posted to the lead route exactly once.
       expect(fetchMock).toHaveBeenCalledTimes(1);
       const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit];
       expect(url).toBe("/api/lead");
@@ -235,7 +228,6 @@ describe("Survey", () => {
         source: "elecsol-solarcheck-landing-page",
       });
       expect(payload.submissionId).toEqual(expect.any(String));
-      expect(payload).not.toHaveProperty("otp");
 
       // The Meta Pixel Lead event fires exactly once when the survey is completed.
       expect(fbq).toHaveBeenCalledTimes(1);
