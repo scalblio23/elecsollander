@@ -2,7 +2,7 @@
 
 A responsive Next.js (App Router) and TypeScript "Check Your Eligibility" landing page for SolarCheck. It includes the full multi-step survey with branching, validation, Previous navigation, path-aware progress, the No Net Cost Solar modal, and a local-only demo verification step.
 
-> **Frontend demo only.** Nothing you enter leaves the browser. There is no lead submission, SMS, webhook, TrustedForm, Google Maps key or any other credential. Answers live in React state and are cleared on refresh. The only third-party script is the Meta Pixel (see below).
+> **Lead submission.** When the survey is completed, the answers (never the verification code) are posted to `/api/lead`, which forwards them to the Make scenario "62 - Elecsol Electrical - Website Leads - 29th Sep". That scenario dedupes on submission ID (column U) and appends a row to the "62 - Elecsol Electrical" tab of the CLIENT LEAD LIST - Tracker sheet. Set `MAKE_WEBHOOK_URL` to override the webhook. The only third-party script is the Meta Pixel (see below).
 
 ## Requirements
 
