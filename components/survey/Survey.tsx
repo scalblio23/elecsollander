@@ -18,10 +18,10 @@ import {
 import { submitLead } from "@/lib/lead";
 import { trackPixelEvent } from "@/lib/pixel";
 import { ChoiceQuestion } from "./ChoiceQuestion";
+import { ConsentNotice } from "./ConsentNotice";
 import { FieldQuestion } from "./FieldQuestion";
 import { RenterMessage } from "./RenterMessage";
 import { SuccessMessage } from "./SuccessMessage";
-import { VerifyStep } from "./VerifyStep";
 import styles from "./Survey.module.css";
 
 /** Delay between choosing a card and moving on, so the selection is visible. */
@@ -245,16 +245,6 @@ export function Survey() {
 
             {step === "renter" && <RenterMessage />}
 
-            {step === "verify" && (
-              <VerifyStep
-                mobile={answers.mobile ?? ""}
-                code={answers.otp ?? ""}
-                error={errors.otp}
-                inputId={fieldId("otp")}
-                onChange={(value) => setAnswer("otp", value)}
-              />
-            )}
-
             {step === "success" && <SuccessMessage answers={answers} onRestart={restart} />}
           </div>
 
@@ -265,7 +255,7 @@ export function Survey() {
                   type="submit"
                   className={`${styles.nextButton} ${isStepValid ? "" : styles.inactive}`}
                 >
-                  Next
+                  {step === "contact" ? "See If I Qualify" : "Next"}
                 </button>
               )}
               {canGoBack && (
@@ -275,6 +265,8 @@ export function Survey() {
               )}
             </div>
           )}
+
+          {step === "contact" && <ConsentNotice />}
         </form>
       </div>
     </section>

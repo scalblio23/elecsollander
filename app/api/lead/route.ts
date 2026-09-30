@@ -1,8 +1,8 @@
 import { sanitiseLead } from "@/lib/lead";
 
 /**
- * Make webhook for "62 - Elecsol Electrical - Website Leads - 29th Sep", which appends each
- * lead to the "62 - Elecsol Electrical" tab of the client lead list. Set
+ * Make webhook for the "81 - Elecsol Electrical - Website Leads" scenario, which appends each
+ * lead to the "81 - Elecsol Electrical - Website Leads" tab of the client lead list. Set
  * MAKE_WEBHOOK_URL to point a deployment somewhere else.
  */
 const DEFAULT_WEBHOOK_URL = "https://hook.eu1.make.com/tds511csbujm4nrdfxvtntlgxpfidfjr";

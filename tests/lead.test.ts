@@ -23,11 +23,10 @@ const answers: Answers = {
   lastName: "Lee",
   email: "Sam@Example.com",
   mobile: "+61412345678",
-  otp: "123456",
 };
 
 describe("buildLeadPayload", () => {
-  it("sends active-path answers, normalised, without the OTP", () => {
+  it("sends active-path answers, normalised", () => {
     const payload = buildLeadPayload(answers, meta);
     expect(payload).toMatchObject({
       ...meta,
@@ -38,7 +37,6 @@ describe("buildLeadPayload", () => {
       email: "sam@example.com",
       mobile: "0412 345 678",
     });
-    expect(payload).not.toHaveProperty("otp");
   });
 });
 

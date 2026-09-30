@@ -1,7 +1,7 @@
 /**
  * Lead submission. A completed survey is posted to our own `/api/lead` route,
- * which forwards it to the Make webhook that writes the "62 - Elecsol Electrical"
- * tab of the client lead list.
+ * which forwards it to the Make webhook that writes the
+ * "81 - Elecsol Electrical - Website Leads" tab of the client lead list.
  */
 
 import { formatMobile, getActiveAnswers, type AnswerKey, type Answers } from "@/lib/survey";
@@ -43,8 +43,7 @@ interface LeadMeta {
 
 /**
  * Build the webhook payload from the survey answers. Only answers on the
- * active path are included (abandoned branches are sent as empty strings) and
- * the verification code is never sent.
+ * active path are included (abandoned branches are sent as empty strings).
  */
 export function buildLeadPayload(answers: Answers, meta: LeadMeta): LeadPayload {
   const active = getActiveAnswers(answers);
