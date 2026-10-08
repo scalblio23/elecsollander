@@ -1,12 +1,12 @@
 import { describe, expect, it } from "vitest";
 import {
-  DEMO_OTP,
   formatMobile,
   getActiveAnswers,
   getNextStep,
   getPath,
   getPreviousStep,
   getProgress,
+  isPlaceholderMobile,
   isValidAustralianMobile,
   normaliseMobile,
   validateField,
@@ -25,7 +25,7 @@ const noSolarPath = [
   "address",
   "name",
   "contact",
-  "verify",
+  "confirm",
   "success",
 ];
 
@@ -60,7 +60,7 @@ describe("survey branching", () => {
     expect(getPreviousStep("renter", { homeowner: "Rent" })).toBe("homeowner");
     expect(getPreviousStep("bill", { homeowner: "Own", existingSolar: "Yes" })).toBe("reason");
     expect(getPreviousStep("bill", { homeowner: "Own", existingSolar: "No" })).toBe("existingSolar");
-    expect(getPreviousStep("success", { homeowner: "Own" })).toBe("verify");
+    expect(getPreviousStep("success", { homeowner: "Own" })).toBe("confirm");
   });
 
   it("drops answers from abandoned branches", () => {
@@ -89,7 +89,7 @@ describe("progress", () => {
   it("grows the total when the existing solar branch is chosen", () => {
     const answers: Answers = { homeowner: "Own", existingSolar: "Yes" };
     expect(getProgress("systemAge", answers)).toEqual({ current: 4, total: 13, percent: 23 });
-    expect(getProgress("verify", answers)).toEqual({ current: 13, total: 13, percent: 92 });
+    expect(getProgress("confirm", answers)).toEqual({ current: 13, total: 13, percent: 92 });
   });
 
   it("is monotonic along every path and completes on terminal screens", () => {
@@ -146,11 +146,14 @@ describe("validation", () => {
     expect(formatMobile("0412345678")).toBe("0412 345 678");
   });
 
-  it("only accepts the documented demo code", () => {
-    expect(DEMO_OTP).toBe("123456");
-    expect(validateField("otp", "")).toMatch(/6-digit/);
-    expect(validateField("otp", "123")).toMatch(/must be 6 digits/);
-    expect(validateField("otp", "654321")).toMatch(/incorrect/);
-    expect(validateField("otp", DEMO_OTP)).toBeUndefined();
+  it("rejects made-up mobile numbers that pass the format check", () => {
+    for (const fake of ["0400000000", "0444 444 444", "0412 345 678", "+61 423 456 789", "0487654321", "0498765432"]) {
+      expect(isPlaceholderMobile(fake)).toBe(true);
+      expect(validateField("mobile", fake)).toMatch(/real mobile number/);
+    }
+    for (const real of ["0438 552 917", "0412 345 679", "0400 000 001"]) {
+      expect(isPlaceholderMobile(real)).toBe(false);
+      expect(validateField("mobile", real)).toBeUndefined();
+    }
   });
 });

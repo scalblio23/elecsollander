@@ -4,7 +4,7 @@
  * tab of the client lead list.
  */
 
-import { formatMobile, getActiveAnswers, type AnswerKey, type Answers } from "@/lib/survey";
+import { formatMobile, getActiveAnswers, validateField, type AnswerKey, type Answers } from "@/lib/survey";
 
 export const LEAD_ENDPOINT = "/api/lead";
 export const LEAD_SOURCE = "elecsol-solarcheck-landing-page";
@@ -62,7 +62,10 @@ const REQUIRED_KEYS: readonly LeadKey[] = ["submissionId", "firstName", "email",
 const MAX_LENGTH = 300;
 const MAX_URL_LENGTH = 2000;
 
-/** Keep only known string fields, trimmed and length-capped. Returns null if a required field is missing. */
+/**
+ * Keep only known string fields, trimmed and length-capped. Returns null if a
+ * required field is missing or the mobile number is invalid or made up.
+ */
 export function sanitiseLead(body: unknown): LeadPayload | null {
   if (!body || typeof body !== "object") return null;
   const input = body as Record<string, unknown>;
@@ -73,7 +76,10 @@ export function sanitiseLead(body: unknown): LeadPayload | null {
     const limit = key === "pageUrl" ? MAX_URL_LENGTH : MAX_LENGTH;
     lead[key] = typeof value === "string" ? value.trim().slice(0, limit) : "";
   }
-  return REQUIRED_KEYS.every((key) => lead[key]) ? lead : null;
+  if (!REQUIRED_KEYS.every((key) => lead[key])) return null;
+  if (validateField("mobile", lead.mobile)) return null;
+  lead.mobile = formatMobile(lead.mobile);
+  return lead;
 }
 
 function createSubmissionId(): string {

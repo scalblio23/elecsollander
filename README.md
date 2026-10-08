@@ -1,8 +1,8 @@
 # SolarCheck Landing Page
 
-A responsive Next.js (App Router) and TypeScript "Check Your Eligibility" landing page for SolarCheck. It includes the full multi-step survey with branching, validation, Previous navigation, path-aware progress, the No Net Cost Solar modal, and a local-only demo verification step.
+A responsive Next.js (App Router) and TypeScript "Check Your Eligibility" landing page for SolarCheck. It includes the full multi-step survey with branching, validation, Previous navigation, path-aware progress, the No Net Cost Solar modal, and a final step that asks the visitor to confirm their mobile number.
 
-> **Lead submission.** When the survey is completed, the answers (never the verification code) are posted to `/api/lead`, which forwards them to the Make scenario "62 - Elecsol Electrical - Website Leads - 29th Sep". That scenario dedupes on submission ID (column U) and appends a row to the "62 - Elecsol Electrical" tab of the CLIENT LEAD LIST - Tracker sheet. Set `MAKE_WEBHOOK_URL` to override the webhook. The only third-party script is the Meta Pixel (see below).
+> **Lead submission.** When the survey is completed, the answers are posted to `/api/lead`, which forwards them to the Make scenario "62 - Elecsol Electrical - Website Leads - 29th Sep". That scenario dedupes on submission ID (column U) and appends a row to the "62 - Elecsol Electrical" tab of the CLIENT LEAD LIST - Tracker sheet. Set `MAKE_WEBHOOK_URL` to override the webhook. The only third-party script is the Meta Pixel (see below).
 
 ## Requirements
 
@@ -29,7 +29,7 @@ Open http://localhost:3000.
 | `npm run typecheck` | `tsc --noEmit`                                   |
 | `npm test`          | Vitest unit and integration tests (jsdom)        |
 
-## Survey demo
+## Survey flow
 
 1. **Postcode**: a 4-digit postcode (for example `2000`). Press Enter or **Next**.
 2. **Do you own your home?**
@@ -39,8 +39,10 @@ Open http://localhost:3000.
    - **Yes** adds _How old is your existing solar system?_ and _Why are you interested in solar?_
    - **No** / **Solar Hot Water** skip straight to the bill question.
 4. Quarterly bill, home age, roof type and roof shading.
-5. Address (street, suburb/city, postcode; the postcode is pre-filled from step 1), then first and last name, then email and an Australian mobile number starting with `04`.
-6. **Demo verification**: no text message is sent. Enter **`123456`** and choose **See If I Qualify** to reach the success screen. It summarises the answers from the active path only.
+5. Address (street, suburb/city, postcode; the postcode is pre-filled from step 1), then first and last name, then email and an Australian mobile number starting with `04`. Obviously made-up numbers (the eight digits after `04` all the same, like `0400 000 000`, or a straight run, like `0412 345 678`) are rejected.
+6. **Confirm**: the mobile number is shown back in large type with the email. **Previous** goes back to fix it; **Yes, See If I Qualify** submits the lead and shows the success screen, which summarises the answers from the active path only.
+
+No SMS is sent. The mobile number is checked again in `/api/lead`, so an invalid or made-up number never reaches the webhook.
 
 Behaviour notes:
 
@@ -76,7 +78,7 @@ docs/reference/       Source screenshots used for visual matching
 
 `components/MetaPixel.tsx` loads the Meta Pixel base code in the root layout and fires the standard `PageView` on every load. When the survey reaches the success screen, `components/survey/Survey.tsx` calls `trackPixelEvent("Lead")` from `lib/pixel.ts`, which fires the standard `Lead` event. The helper is a no-op if the pixel is blocked or not loaded. The pixel ID lives in `lib/site.ts` as `metaPixelId`; set it to an empty string to disable the pixel entirely.
 
-To change the demo code, edit `DEMO_OTP` in `lib/survey.ts`. To change the brand name, contact email or the Privacy, Terms and energy assistance links, edit `lib/site.ts`. Brand colours are CSS variables at the top of `app/globals.css` (`--color-accent` is the yellow).
+To change the brand name, contact email or the Privacy, Terms and energy assistance links, edit `lib/site.ts`. Brand colours are CSS variables at the top of `app/globals.css` (`--color-accent` is the yellow).
 
 ## Deployment (Vercel)
 

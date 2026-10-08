@@ -6,8 +6,6 @@
  * visited path, progress and "Previous" target are all derived from those.
  */
 
-export const DEMO_OTP = "123456";
-
 export type ChoiceStepId =
   | "homeowner"
   | "existingSolar"
@@ -20,7 +18,7 @@ export type ChoiceStepId =
 
 export type FieldStepId = "postcode" | "address" | "name" | "contact";
 
-export type StepId = FieldStepId | ChoiceStepId | "renter" | "verify" | "success";
+export type StepId = FieldStepId | ChoiceStepId | "renter" | "confirm" | "success";
 
 export type AnswerKey =
   | ChoiceStepId
@@ -31,8 +29,7 @@ export type AnswerKey =
   | "firstName"
   | "lastName"
   | "email"
-  | "mobile"
-  | "otp";
+  | "mobile";
 
 export type Answers = Partial<Record<AnswerKey, string>>;
 
@@ -86,7 +83,7 @@ export interface FieldStep {
 
 export interface MessageStep {
   kind: "message";
-  id: "renter" | "verify" | "success";
+  id: "renter" | "confirm" | "success";
 }
 
 export type Step = ChoiceStep | FieldStep | MessageStep;
@@ -269,7 +266,7 @@ export const STEPS: Record<StepId, Step> = {
     kind: "fields",
     id: "contact",
     title: { lead: "How can we", emphasis: "reach you?" },
-    description: "You will be required to verify this mobile number.",
+    description: "Our solar experts will call you on this number, so please double-check it.",
     fields: [
       {
         key: "email",
@@ -292,7 +289,7 @@ export const STEPS: Record<StepId, Step> = {
       },
     ],
   },
-  verify: { kind: "message", id: "verify" },
+  confirm: { kind: "message", id: "confirm" },
   success: { kind: "message", id: "success" },
 };
 
@@ -332,8 +329,8 @@ export function getNextStep(step: StepId, answers: Answers): StepId | null {
     case "name":
       return "contact";
     case "contact":
-      return "verify";
-    case "verify":
+      return "confirm";
+    case "confirm":
       return "success";
     case "renter":
     case "success":
@@ -388,7 +385,7 @@ export function getStepKeys(step: StepId): AnswerKey[] {
   const definition = STEPS[step];
   if (definition.kind === "choice") return [definition.id];
   if (definition.kind === "fields") return definition.fields.map((field) => field.key);
-  return step === "verify" ? ["otp"] : [];
+  return [];
 }
 
 /** Answers limited to steps on the active path, dropping abandoned branches. */
@@ -418,6 +415,17 @@ export function normaliseMobile(value: string): string {
 
 export function isValidAustralianMobile(value: string): boolean {
   return AU_MOBILE_PATTERN.test(normaliseMobile(value));
+}
+
+/**
+ * Spot made-up numbers that pass the format check: the eight digits after
+ * "04" are all the same (0400 000 000) or a straight run (0412 345 678).
+ */
+export function isPlaceholderMobile(value: string): boolean {
+  const subscriber = normaliseMobile(value).slice(2);
+  if (/^(\d)\1{7}$/.test(subscriber)) return true;
+  const steps = new Set([...subscriber].slice(1).map((digit, i) => Number(digit) - Number(subscriber[i])));
+  return steps.size === 1 && (steps.has(1) || steps.has(-1));
 }
 
 /** Format a valid mobile as `0412 345 678`. */
@@ -452,13 +460,12 @@ export function validateField(key: AnswerKey, rawValue: string | undefined): str
       return EMAIL_PATTERN.test(value) ? undefined : "Please enter a valid email address, e.g. name@example.com.";
     case "mobile":
       if (!value) return "Please enter your mobile number.";
-      return isValidAustralianMobile(value)
-        ? undefined
-        : "Please enter a valid Australian mobile number starting with 04, e.g. 0412 345 678.";
-    case "otp":
-      if (!value) return "Please enter your 6-digit verification code.";
-      if (!/^\d{6}$/.test(value)) return "Your verification code must be 6 digits.";
-      return value === DEMO_OTP ? undefined : `That code is incorrect. For this demo, enter ${DEMO_OTP}.`;
+      if (!isValidAustralianMobile(value)) {
+        return "Please enter a valid Australian mobile number starting with 04, e.g. 0438 552 917.";
+      }
+      return isPlaceholderMobile(value)
+        ? "That doesn't look like a real mobile number. Please check it and try again."
+        : undefined;
     default:
       return value ? undefined : "Please select an option to continue.";
   }

@@ -22,12 +22,11 @@ const answers: Answers = {
   firstName: "Sam",
   lastName: "Lee",
   email: "Sam@Example.com",
-  mobile: "+61412345678",
-  otp: "123456",
+  mobile: "+61438552917",
 };
 
 describe("buildLeadPayload", () => {
-  it("sends active-path answers, normalised, without the OTP", () => {
+  it("sends active-path answers, normalised", () => {
     const payload = buildLeadPayload(answers, meta);
     expect(payload).toMatchObject({
       ...meta,
@@ -36,23 +35,30 @@ describe("buildLeadPayload", () => {
       reason: "",
       street: "1 Queen Street",
       email: "sam@example.com",
-      mobile: "0412 345 678",
+      mobile: "0438 552 917",
     });
-    expect(payload).not.toHaveProperty("otp");
   });
 });
 
 describe("sanitiseLead", () => {
   it("drops unknown keys and non-string values", () => {
-    const lead = sanitiseLead({ ...buildLeadPayload(answers, meta), otp: "123456", bill: 5 });
+    const lead = sanitiseLead({ ...buildLeadPayload(answers, meta), extra: "x", bill: 5 });
     expect(lead).not.toBeNull();
-    expect(lead).not.toHaveProperty("otp");
+    expect(lead).not.toHaveProperty("extra");
     expect(lead?.bill).toBe("");
   });
 
   it("rejects leads missing required fields", () => {
     expect(sanitiseLead(null)).toBeNull();
     expect(sanitiseLead({ ...buildLeadPayload(answers, meta), email: "" })).toBeNull();
+  });
+
+  it("rejects invalid or made-up mobile numbers and normalises valid ones", () => {
+    const lead = buildLeadPayload(answers, meta);
+    for (const mobile of ["0212345678", "041234567", "0400 000 000", "0412 345 678"]) {
+      expect(sanitiseLead({ ...lead, mobile })).toBeNull();
+    }
+    expect(sanitiseLead({ ...lead, mobile: "+61 438-552-917" })?.mobile).toBe("0438 552 917");
   });
 });
 
